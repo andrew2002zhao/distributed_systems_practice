@@ -29,7 +29,7 @@ func main() {
 		//call lin-tso service 
 		//get the ts back
 		unique_id_body := make(map[string]any)
-		unique_id_body["type"] = "ts"
+		unique_id_body["type"] = "ts" // TYPE SHIT!!!!
 		ts_msg, ts_err := n.SyncRPC(context.Background(), "lin-tso", unique_id_body)
 		if ts_err != nil {
 			return ts_err
