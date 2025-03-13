@@ -2,7 +2,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"os"
@@ -15,19 +14,18 @@ import (
 func main() {
 	n := maelstrom.NewNode();
 	var self string;
-	var neighbors[]string;
+	var neighbors[]interface{};
 	n.Handle("topology", func(msg maelstrom.Message) error {
-		topology := make(map[string]any);
-		if err := json.Unmarshal(msg.Body, &topology); err != nil {
+		request := make(map[string]any);
+		if err := json.Unmarshal(msg.Body, &request); err != nil {
 			return err;
 		}
 		self = msg.Dest;
 		//access the value at topology and cast to a string array
-		if v, ok  := topology[self]; ok {
-			if v != nil {
-				neighbors = v.([]string)
-			}
-		}
+		var topology map[string]any = request["topology"].(map[string]any);
+		
+		neighbors = topology[self].([]interface{});
+		
 		
 
 		body := make(map[string]any);
@@ -39,6 +37,10 @@ func main() {
 
 	//make a set to hold all values seen
 	values := make(map[float64]float64);
+
+	n.Handle("broadcast_ok", func(msg maelstrom.Message) error {
+		return nil;
+	});
 	
 	n.Handle("broadcast", func(msg maelstrom.Message) error {
 		//need to unmarshall data
@@ -62,7 +64,7 @@ func main() {
 				propagate_request := make(map[string]any);
 				propagate_request["type"] = "broadcast";
 				propagate_request["message"] = value;
-				n.SyncRPC(context.Background(), neighbors[i], propagate_request);
+				n.Send(neighbors[i].(string), propagate_request);
 			} 
 		} 
 
